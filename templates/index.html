@@ -55,17 +55,20 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
         container: "viewDiv",
         map: map,
         center: [-8.659969, 40.631375],
-        zoom: 12
+        zoom: 15
     });
 
     const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
 
-    view.on("click", function(event){
+    /*view.on("click", function(event){
 
+      
       if (view.graphics.length === 0) {
         addGraphic("origin", event.mapPoint);
+        console.log(event.mapPoint.latitude + "  " + event.mapPoint.longitude);
       } else if (view.graphics.length === 1) {
         addGraphic("destination", event.mapPoint);
+        console.log(event.mapPoint.latitude + "  " + event.mapPoint.longitude);
 
         getRoute(); // Call the route service
 
@@ -74,7 +77,87 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
         addGraphic("origin",event.mapPoint);
       }
 
+    });*/
+
+    const testPoint = new Point({
+      longitude: -8.66034609789469, // Replace with the longitude of the test point
+      latitude: 40.644290110213646 // Replace with the latitude of the test point
     });
+
+    const testPoint2 = new Point({
+      longitude: -8.654051846533127, // Replace with the longitude of the test point
+      latitude: 40.63766868062355 // Replace with the latitude of the test point
+    });
+
+    addGraphic("origin", testPoint);
+    addGraphic("destination", testPoint2);
+    getRoute(); // Call the route service
+
+    const parsedDataGnb = JSON.parse('{{ data_gnb | tojson | safe }}');
+
+    var graphicsLayer = new GraphicsLayer();
+    var graphicsLayer2 = new GraphicsLayer();
+    var graphicsLayer3 = new GraphicsLayer();
+    var graphicsLayer4 = new GraphicsLayer();
+    var graphicsLayer5 = new GraphicsLayer();
+
+    var idx = 1
+
+    for(var i=0; i<parsedDataGnb[parsedDataGnb.length-2][0]; i++){
+      
+      var point = new Point({
+        longitude: parsedDataGnb[idx][2],
+        latitude: parsedDataGnb[idx][1]
+      });
+      
+      var aux = parsedDataGnb[idx][0]
+      
+      while (parsedDataGnb[idx][0]==aux){
+        var circle = new Circle({
+          center: point,
+          radius: parsedDataGnb[idx][6]*1000
+        });
+        
+        var color = getColor(parsedDataGnb[idx][5]);
+        
+        var symbol = new SimpleFillSymbol({
+          color: new Color([color.r, color.g, color.b, 0.05]), // Set transparency to 50% (0.5)
+          outline: new SimpleLineSymbol({
+            color: new Color([color.r, color.g, color.b, 0]),
+            width: 0.5
+          })
+        });
+        
+        var graphic = new Graphic({
+          geometry: circle,
+          symbol: symbol
+        });
+
+        var graphic1,graphic2,graphic3,graphic4,graphic5;
+
+        if (parsedDataGnb[idx][5] > 20) graphic1=graphic; // Red
+        else if (parsedDataGnb[idx][5] > 10) graphic2=graphic; // Orange
+        else if (parsedDataGnb[idx][5] > 5) graphic3=graphic; // Yellow
+        else if (parsedDataGnb[idx][5] > 0) graphic4=graphic; // Green
+        else graphic5=graphic; // Blue
+
+        graphicsLayer.add(graphic1);
+        graphicsLayer2.add(graphic2);
+        graphicsLayer3.add(graphic3);
+        graphicsLayer4.add(graphic4);
+        graphicsLayer5.add(graphic5);
+        
+        idx++;
+      }
+      
+      
+    }
+
+    map.add(graphicsLayer5);
+    map.add(graphicsLayer4);
+    map.add(graphicsLayer3);
+    map.add(graphicsLayer2);
+    map.add(graphicsLayer);
 
     //get the data from atcll.csv
     const parsedData = JSON.parse('{{ data_atcll | tojson | safe }}');
@@ -113,6 +196,16 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
         
     }
 
+    function getColor(value) {
+      
+      // This example uses a simple condition for color selection
+
+      if (value > 20) return new Color("#FF0000"); // Red
+      else if (value > 10) return new Color("#FFA500"); // Orange
+      else if (value > 5) return new Color("#FFFF00"); // Yellow
+      else if (value > 0) return new Color("#00FF00"); // Green
+      else return new Color("#0000FF"); // Blue
+    }
 
     function addGraphic(type, point) {
       const graphic = new Graphic({

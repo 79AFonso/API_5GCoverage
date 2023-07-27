@@ -48,6 +48,8 @@ def index():
         for idx, row in enumerate(reader):
             if idx != 0:
                 data_gnb.append(row)
+
+    
                 
     
     return render_template('index.html', data_atcll=data_atcll, data_gnb=data_gnb)
