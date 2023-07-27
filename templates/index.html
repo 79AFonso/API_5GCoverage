@@ -60,26 +60,10 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
 
     const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
 
-    /*view.on("click", function(event){
+    view.on("click", function(event){
 
       
-      if (view.graphics.length === 0) {
-        addGraphic("origin", event.mapPoint);
-        console.log(event.mapPoint.latitude + "  " + event.mapPoint.longitude);
-      } else if (view.graphics.length === 1) {
-        addGraphic("destination", event.mapPoint);
-        console.log(event.mapPoint.latitude + "  " + event.mapPoint.longitude);
-
-        getRoute(); // Call the route service
-
-      } else {
-        view.graphics.removeAll();
-        addGraphic("origin",event.mapPoint);
-      }
-
-    });*/
-
-    const testPoint = new Point({
+      const testPoint = new Point({
       longitude: -8.66034609789469, // Replace with the longitude of the test point
       latitude: 40.644290110213646 // Replace with the latitude of the test point
     });
@@ -92,6 +76,10 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
     addGraphic("origin", testPoint);
     addGraphic("destination", testPoint2);
     getRoute(); // Call the route service
+
+    });
+
+    
 
     const parsedDataGnb = JSON.parse('{{ data_gnb | tojson | safe }}');
 
@@ -254,7 +242,7 @@ https://developers.arcgis.com/documentation/mapping-apis-and-services/get-starte
                     for (const path of polyline.paths) {
                         // Iterate through each point in the path
                         for (const point of path) {
-                        console.log(point);
+                          
                           const lat  = point[1];
                           const long = point[0];
 

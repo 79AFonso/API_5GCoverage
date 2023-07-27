@@ -63,17 +63,19 @@ def run_python_code():
 
     latitude = float(request.args.get('latitude'))
     longitude = float(request.args.get('longitude'))
-
-
     
-    for idx, row in enumerate(data_atcll):
-        if idx != 0:
+    for row in data_gnb:
+        
+        if is_point_inside_circle(float(row[1]), float(row[2]), float(row[6]), latitude, longitude) and float(row[5]) > 5:
+            return jsonify({'message': "yes"})
             
-            if is_point_inside_circle(float(row[1]), float(row[2]), 0.1, latitude, longitude):
-                result_message = "yes"
-                print("Yes it is inside")
-            else:
-                result_message = "no"
+        else:      
+            result_message = "no"
+            for row_atcll in data_atcll:
+                if is_point_inside_circle(float(row_atcll[1]), float(row_atcll[2]), 0.1, latitude, longitude):
+                    print(str(latitude) + "   " + str(longitude))
+                    return jsonify({'message': result_message})
+
             
 
     return jsonify({'message': result_message})
