@@ -1,0 +1,196 @@
+
+
+<!--
+
+To run this demo, you need to replace 'YOUR_API_KEY' with an API key from the ArcGIS Developers dashboard.
+
+Sign up for a free account and get an API key.
+
+https://developers.arcgis.com/documentation/mapping-apis-and-services/get-started/
+
+-->
+
+<html>
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+ <title>ArcGIS Maps SDK for JavaScript Tutorials: Find a route and directions</title>
+ <style>
+  html, body, #viewDiv {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+  }
+ </style>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.27/"></script>
+
+  <script>
+
+    require([
+        "esri/config",
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/geometry/Circle",
+        "esri/geometry/Point",
+        "esri/layers/GraphicsLayer",
+        "esri/symbols/SimpleFillSymbol",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/Color",
+        "esri/Graphic",
+        "esri/rest/route",
+        "esri/rest/support/RouteParameters",
+        "esri/rest/support/FeatureSet"
+
+    ], function(esriConfig, Map, MapView, Circle, Point, GraphicsLayer, SimpleFillSymbol, SimpleLineSymbol, Color, Graphic, route, RouteParameters, FeatureSet) {
+
+    esriConfig.apiKey = "AAPK2d77cd5e8fa243f0b7baa72d9c2231426PIqYzb96OP_oMESpjJ5rJ4Gq2eqgm3ytKUr-W_mNzqoMvvVjO3z9CmbkHqUYKKr";
+
+    var map = new Map({
+        basemap: "streets"
+    });
+
+    var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [-8.659969, 40.631375],
+        zoom: 12
+    });
+
+    const routeUrl = "https://route-api.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World";
+
+    view.on("click", function(event){
+
+      if (view.graphics.length === 0) {
+        addGraphic("origin", event.mapPoint);
+      } else if (view.graphics.length === 1) {
+        addGraphic("destination", event.mapPoint);
+
+        getRoute(); // Call the route service
+
+      } else {
+        view.graphics.removeAll();
+        addGraphic("origin",event.mapPoint);
+      }
+
+    });
+
+    //get the data from atcll.csv
+    const parsedData = JSON.parse('{{ data_atcll | tojson | safe }}');
+
+    var graphicsLayerAtcll = new GraphicsLayer();
+    map.add(graphicsLayerAtcll);
+
+    var idx = 1
+
+    for(var i=0; i<parsedData.length; i++){
+
+        var point = new Point({
+        longitude: parsedData[i][2],
+        latitude: parsedData[i][1]
+        });
+
+        var circle = new Circle({
+        center: point,
+        radius: 100
+        });
+
+        var symbol = new SimpleFillSymbol({
+        color: new Color([124, 252, 0, 0.3]), // Set transparency to 50% (0.5)
+        outline: new SimpleLineSymbol({
+            color: new Color("#000"),
+            width: 1
+        })
+        });
+
+        var graphic = new Graphic({
+        geometry: circle,
+        symbol: symbol
+        });
+        
+        graphicsLayerAtcll.add(graphic);
+        
+    }
+
+
+    function addGraphic(type, point) {
+      const graphic = new Graphic({
+        symbol: {
+          type: "simple-marker",
+          color: (type === "origin") ? "white" : "black",
+          size: "8px"
+        },
+        geometry: point
+      });
+      view.graphics.add(graphic);
+    }
+
+    function pointInsideCircle(point, circle) {
+        const distance = geometryEngine.distance(circle.center, point);
+        return distance <= circle.radius;
+    }
+
+    function getRoute() {
+        const routeParams = new RouteParameters({
+            stops: new FeatureSet({
+            features: view.graphics.toArray()
+            }),
+            returnDirections: true
+        });
+
+        route
+            .solve(routeUrl, routeParams)
+            .then(function (data) {
+            data.routeResults.forEach(function (result) {
+                result.route.symbol = {
+                type: "simple-line",
+                color: [5, 150, 255],
+                width: 3
+                };
+                view.graphics.add(result.route);
+
+                // Retrieve the route directions
+                const directions = result.directions;
+
+                // Iterate through each step in the directions
+                for (const step of directions.features) {
+                    const polyline = step.geometry;
+
+                    // Iterate through each path segment in the polyline
+                    for (const path of polyline.paths) {
+                        // Iterate through each point in the path
+                        for (const point of path) {
+                        console.log(point);
+                          const lat  = point[1];
+                          const long = point[0];
+
+                          fetch(`/run_python_code?latitude=${lat}&longitude=${long}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                
+                                console.log(data); // Handle the response from Flask
+                            })
+                            .catch(error => {
+                                console.error('Error calling Flask function:', error);
+                            });  
+
+                        }
+                    }
+                }
+            });
+        })
+        .catch(function (error) {
+        console.log(error);
+        });
+
+    }
+
+  });
+  </script>
+
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
