@@ -96,9 +96,11 @@ def run_python_code():
     result_message = "yes"  # Set a default value
 
     for row_atcll in data_atcll:
+        #Check if a given point from the path is within one atcll pole radius
         if is_point_inside_circle(float(row_atcll[1]), float(row_atcll[2]), 0.1, latitude, longitude):
             for row in data_gnb:
-                if is_point_inside_circle(float(row[1]), float(row[2]), 3, latitude, longitude):
+                #check if the same point has good coverage of 5G network
+                if is_point_inside_circle(float(row[1]), float(row[2]), float(row[6]), latitude, longitude):
                     result_message = "no"
                     midpoint_lat, midpoint_lon = calculate_midpoint(float(row_atcll[1]), float(row_atcll[2]), latitude, longitude)
                     list_coords.append([midpoint_lat, midpoint_lon])
